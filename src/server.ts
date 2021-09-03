@@ -1,14 +1,44 @@
-import Fastify, { FastifyInstance, RouteShorthandOptions } from 'fastify'
+import Fastify, { FastifyInstance, } from 'fastify'
 import { Server, IncomingMessage, ServerResponse } from 'http'
-import { TodoRoute } from './routes/todo'
+import { fastifySwagger } from 'fastify-swagger'
+import { TodoRoutes } from './routes/todo'
 
-const app: FastifyInstance = Fastify({ logger: true })
-app.register(TodoRoute)
+const fastifyOptions = {
+  logger: true
+}
 
+// Create a fastify server
+const app: FastifyInstance = Fastify(fastifyOptions)
+
+// Register plugins
+app.register(fastifySwagger, {
+   exposeRoute: true,
+   routePrefix: '/docs',
+   swagger: {
+      info: {
+         title: 'Todolist API Documentation',
+         description: 'Blazing fast api powered by fastify',
+         version: '1.0'
+      },
+      definitions: {
+         Todo: {
+            type: 'object',
+            required: ['id', 'task'],
+            properties: {
+               id: { type: 'integer' },
+               task: { type: 'string' }
+            }
+         }
+      },
+   },
+})
+
+app.register(TodoRoutes)
+
+// Main server function
 const start = async () => {
   try {
     await app.listen(3000)
-
     const address = app.server.address()
     console.log(`Server is listening at http://${address.address}:${address.port}`)
   } catch (err) {
@@ -17,4 +47,5 @@ const start = async () => {
   }
 }
 
+// Start the server
 start()
